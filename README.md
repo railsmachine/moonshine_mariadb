@@ -66,18 +66,22 @@ end</code></pre>
 
 Since MariaDB is a replacement for MySQL, here's what your database_manifest.rb should look like (pretty much):
 
-<pre><code>include Moonshine::MariaDb
-recipe :default_system_config
-recipe :non_rails_recipes
-configure :iptables => build_mariadb_iptables_rules
-configure :mariadb => build_mariadb_configuration
-configure :sysctl => {
-  'net.ipv4.tcp_tw_reuse' => 1,
-  'net.ipv4.neigh.default.gc_interval' => 3600
-}
-recipe :iptables
-recipe :sysctl
-recipe :mariadb</code></pre>
+<pre><code>require "#{File.dirname(__FILE__)}/base_manifest.rb"
+
+class DatabaseManifest < BaseManifest
+  include Moonshine::MariaDb
+  recipe :default_system_config
+  recipe :non_rails_recipes
+  configure :iptables => build_mariadb_iptables_rules
+  configure :mariadb => build_mariadb_configuration
+  configure :sysctl => {
+    'net.ipv4.tcp_tw_reuse' => 1,
+    'net.ipv4.neigh.default.gc_interval' => 3600
+  }
+  recipe :iptables
+  recipe :sysctl
+  recipe :mariadb
+end</code></pre>
 
 If you're using MariaDB on a single server, you should be able to remove the mysql recipe and add mariadb instead.  And since you're on a single server, you don't need to worry about iptables or all of the cluster configuration.
 
