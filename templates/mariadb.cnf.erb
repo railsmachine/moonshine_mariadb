@@ -1,0 +1,38 @@
+# MariaDB-specific config file.
+# Read by /etc/mysql/my.cnf
+
+[client]
+# Default is Latin1, if you need UTF-8 set this (also in server section)
+default-character-set = utf8
+
+[mysqld]
+#
+# * Character sets
+# 
+# Default is Latin1, if you need UTF-8 set all this (also in client section)
+#
+bind_address = 0.0.0.0
+
+character-set-server  = utf8
+collation-server      = utf8_general_ci
+character_set_server   = utf8
+collation_server       = utf8_general_ci
+
+<% if database_servers.length > 1 %>
+wsrep_provider          = /usr/lib/galera/libgalera_smm.so
+wsrep_cluster_address   = <%= configuration[:mariadb][:gcomm_cluster_address] || "gcomm://" %>
+wsrep_cluster_name      = <%= configuration[:mariadb][:wsrep_cluster_name] || "mariadb" %>
+wsrep_node_address       = <%= configuration[:mariadb][:wsrep_node_address] || 'localhost' %>
+wsrep_sst_receive_address = <%= configuration[:mariadb][:wsrep_sst_receive_address] || '127.0.0.1' %>
+wsrep_node_name           = <%= configuration[:mariadb][:wsrep_node_name] || 'localhost' %>
+wsrep_sst_auth          = <%= database_environment[:username] %>:<%= database_environment[:password] %>
+wsrep_sst_method=rsync
+<% end %>
+
+binlog_format = ROW
+default_storage_engine  = InnoDB
+innodb_autoinc_lock_mode = 2
+innodb_locks_unsafe_for_binlog = 1
+innodb_flush_log_at_trx_commit=2
+skip-name-resolve
+max_allowed_packet = 2048M

@@ -1,0 +1,20 @@
+# default: on 
+# description: mariadbchk 
+
+service mariadbchk
+{
+  protocol = tcp
+  type = UNLISTED
+  disable = no
+  socket_type = stream
+  port = 9200
+  user = rails
+  server = /usr/bin/mariadbchk
+  log_on_failure += USERID
+  only_from = 0.0.0.0
+  wait = no
+  per_source = UNLIMITED
+  instances = 100
+  cps = 0 1
+  nice = 10
+}

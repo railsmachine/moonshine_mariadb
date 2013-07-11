@@ -1,0 +1,28 @@
+#! /usr/bin/ruby
+
+username = '<%= database_environment[:username] %>'
+password = '<%= database_environment[:password] %>'
+
+status = `mysql --user=#{username} --password=#{password} -e "SHOW STATUS LIKE 'wsrep_local_state';"`
+lines = status.split("\n")
+value = lines.last.split("\t").last
+
+out = ""
+
+if value == "4" # It's synced!
+  out << "HTTP/1.1 200 OK\r\n"
+  out << "Content-Type: text/plain\r\n"
+  out << "\r\n"
+  out << "MariaDB Cluster Node is synced.\r\n"
+  out << "\r\n"
+else
+  out << "HTTP/1.1 503 Service Unavailable\r\n"
+  out << "Content-Type: text/plain\r\n"
+  out << "\r\n"
+  out << "MariaDB Cluster Node is not synced.\r\n"
+  out << "\r\n"
+end
+
+$stdout.puts out
+
+exit
