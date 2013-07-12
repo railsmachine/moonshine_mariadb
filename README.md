@@ -1,5 +1,7 @@
 ## Description
 
+We consider this plugin **beta** at best.  We'll be making lots of updates to it over the next few weeks as we roll out MariaDB to several of our own apps.
+
 This is a [Moonshine](http://github.com/railsmachine/moonshine) recipe for installing and configuring [MariaDB](http://mariadb.org), and setting up a Galera Cluster for replication and failover.  If there's only one server in the database_servers list, it will run MariaDB in standalone mode without any cluster configuration.  If there are two or more (3 nodes are recommended), then it will create the configuration for a cluster.  We've provided several cap tasks to properly configure and bootstrap the cluster (see the Bootstrapping the Cluster section)
 
 ## Gotchas and Warnings
@@ -103,3 +105,5 @@ If you're creating a cluster for the first time, the first deploy after MariaDB 
 ## Notes on Upgrading in Place
 
 According to the MariaDB folks, it's possible to upgrade from MySQL 5.1 to MariaDB 5.x pretty much in place - and that's true, but it's not without its quirks, especially in a production deployment or moving from classic master/slave to a cluster.  
+
+We're going to be upgrading some of our apps in the next week or two and will update the README with the steps we've taken and the configuration we end up running in production.
