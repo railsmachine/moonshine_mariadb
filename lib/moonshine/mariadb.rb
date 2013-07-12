@@ -18,22 +18,23 @@ module Moonshine
       exec "add mariadb key",
         :command => "sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db",
         :require => package('python-software-properties')
-
+        
       exec "add mariadb repo",
         :command => "sudo add-apt-repository 'deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu lucid main'",
         :require => exec('add mariadb key')
+        
+      exec "mariadb apt-get update",
+        :command => "sudo apt-get update",
+        :require => exec('add mariadb repo')
 
       package 'mariadb-galera-server',
         :ensure => :installed,
-        :require => [exec('apt-get update'),exec('add mariadb repo')]
+        :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
 
       package 'galera',
         :ensure => :installed,
-        :require => [exec('apt-get update'),exec('add mariadb repo')]
-        
-      package 'mysql-server',
-        :ensure => :absent,
-        :before => package('mariadb-galera-server')
+        :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
+
     end
 
     def mariadb_config
@@ -47,6 +48,9 @@ module Moonshine
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'moonshine.cnf.erb')),
         :ensure => :present,
         :require => package('mariadb-galera-server')
+        
+      file '/etc/mysql/conf.d/innodb.cnf',
+        :ensure => :absent
 
     end
 

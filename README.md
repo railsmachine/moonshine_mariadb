@@ -99,3 +99,7 @@ If you're creating a cluster for the first time, the first deploy after MariaDB 
 
 * <code>mariadb:status</code> - Tells you if all three nodes are synced.
 * <code>mariadb:restart</code> - Safely restarts MySQL on all the nodes. You *never* want to restart all the nodes at once as MySQL won't come back up since there's not another node to talk to. If you change your configuration files and deploy, you'll need to remember to run this after the deploy finishes.
+
+## Notes on Upgrading in Place
+
+According to the MariaDB folks, it's possible to upgrade from MySQL 5.1 to MariaDB 5.x pretty much in place - and that's true, but it's not without its quirks, especially in a production deployment or moving from classic master/slave to a cluster.  

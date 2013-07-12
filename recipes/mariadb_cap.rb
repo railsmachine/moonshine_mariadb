@@ -12,6 +12,17 @@ end
 
 namespace :mariadb do
   
+  desc "WARNING: You only need to do this if you're upgrading from MySQL! Don't do this unless you're going to immediately deploy mariadb!! Stops slave on both databases, removes troublesome log files, and removes old mysql packages."
+  task :remove_mysql do
+    sudo 'mysql -e "stop slave\G"'
+    transaction do 
+      sudo 'service mysql stop'
+      sudo 'mkdir /tmp/old_mysql && mv /var/lib/mysql/*-bin.* /tmp/old_mysql/ && mv /var/lib/mysql/ib_logfile* /tmp/old_mysql/ && mv /var/lib/mysql/*-relay.* /tmp/old_mysql'
+      sudo 'apt-get remove mysql-common mysql-server libmysqlclient-dev mysql-client libdbd-mysql-perl -y'
+    end
+    puts "You now need to immediately moonshine deploy to both database servers and then run cap STAGE mariadb:setup_master."
+  end
+  
   desc "Performs initial steps for getting the new master ready to form a new cluster."
   task :setup_master, :roles => :db do
     transaction do
@@ -56,7 +67,7 @@ namespace :mariadb do
     f.close 
     
     # TODO: Upload new master_setup.cnf to initial master in /src/mysql/conf.d/ that sets the wsrep_cluster_address to gcomm://
-    upload 'app/manifests/templates/master_setup.cnf', '/tmp/master_setup.cnf', :hosts => mariadb_initial_master
+    upload 'vendor/plugins/moonshine_mariadb/master_setup.cnf', '/tmp/master_setup.cnf', :hosts => mariadb_initial_master
     sudo 'mv /tmp/master_setup.cnf /etc/mysql/conf.d/master_setup.cnf', :hosts => mariadb_initial_master
   end
 
