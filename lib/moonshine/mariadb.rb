@@ -105,7 +105,7 @@ EOF
       file '/usr/bin/mariadbchk',
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'mariadbchk.erb')),
         :ensure => :present,
-        :owner => 'rails',
+        :owner => configuration[:user],
         :mode => '755',
         :require => package('xinetd'),
         :notify => service('xinetd')
