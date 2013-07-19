@@ -18,9 +18,16 @@ module Moonshine
       exec "add mariadb key",
         :command => "sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db",
         :require => package('python-software-properties')
-        
+      
+      if ubuntu_precise?
+        repo = "precise"
+      else
+        repo = "lucid"
+      end
+      
+      
       exec "add mariadb repo",
-        :command => "sudo add-apt-repository 'deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu lucid main'",
+        :command => "sudo add-apt-repository 'deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu #{repo} main'",
         :require => exec('add mariadb key')
         
       exec "mariadb apt-get update",

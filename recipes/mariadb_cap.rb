@@ -38,8 +38,6 @@ namespace :mariadb do
     transaction do
       upload_slave_setup_conf
       restart_slaves
-      sleep 5
-      upload_debian_cnf_to_slaves
     end
     status
     puts "Now run cap #{stage} mariadb:status until all nodes are synced, and then run cap #{stage} mariadb:finalize_cluster to perform cleanup."
@@ -52,6 +50,7 @@ namespace :mariadb do
       remove_slave_setup_conf
       restart_master
       sleep 3
+      upload_debian_cnf_to_slaves
       restart_slaves
       sleep 3
       status
