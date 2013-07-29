@@ -20,7 +20,12 @@ namespace :mariadb do
       sudo 'mkdir /tmp/old_mysql && sudo mv /var/lib/mysql/*-bin.* /tmp/old_mysql/ && sudo mv /var/lib/mysql/ib_logfile* /tmp/old_mysql/ && sudo mv /var/lib/mysql/*-relay.* /tmp/old_mysql'
       sudo 'apt-get remove mysql-server mysql-client -y'
     end
-    puts "You now need to immediately moonshine deploy to both database servers and then run cap STAGE mariadb:setup_master."
+    puts "You now need to immediately moonshine deploy to all database servers."
+    puts "After you deploy, if you're upgrading from mysql, you need to go run sudo mysql_upgrade, shut down mysql, and then restart it."
+    puts "If you have issues with the deploy - apt throwing errors, then you need to move /etc/mysql/debian-start out of the way and put /etc/mysql/debian-start."
+    puts "And then you need to stop all running instances of mysql and run sudo apt-get install -f"
+    puts "After you do that and mysql restarts, you can run mariadb:setup_master."
+    
   end
   
   desc "Performs initial steps for getting the new master ready to form a new cluster."
@@ -66,7 +71,7 @@ namespace :mariadb do
     f.close 
     
     # TODO: Upload new master_setup.cnf to initial master in /src/mysql/conf.d/ that sets the wsrep_cluster_address to gcomm://
-    upload 'vendor/plugins/moonshine_mariadb/master_setup.cnf', '/tmp/master_setup.cnf', :hosts => mariadb_initial_master
+    upload 'vendor/plugins/moonshine_mariadb/templates/master_setup.cnf', '/tmp/master_setup.cnf', :hosts => mariadb_initial_master
     sudo 'mv /tmp/master_setup.cnf /etc/mysql/conf.d/master_setup.cnf', :hosts => mariadb_initial_master
   end
 
