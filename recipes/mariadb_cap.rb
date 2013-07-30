@@ -14,18 +14,48 @@ namespace :mariadb do
   
   desc "WARNING: You only need to do this if you're upgrading from MySQL! Don't do this unless you're going to immediately deploy mariadb!! Stops slave on both databases, removes troublesome log files, and removes old mysql packages."
   task :remove_mysql, :roles => :db do
-    sudo 'mysql -e "stop slave\G"'
-    transaction do 
-      sudo 'service mysql stop'
-      sudo 'mkdir /tmp/old_mysql && sudo mv /var/lib/mysql/*-bin.* /tmp/old_mysql/ && sudo mv /var/lib/mysql/ib_logfile* /tmp/old_mysql/ && sudo mv /var/lib/mysql/*-relay.* /tmp/old_mysql'
-      sudo 'apt-get remove mysql-server mysql-client -y'
-    end
+    stop_slave
+    stop_mysql
+    make_tmp_oldmysql
+    move_bin_files
+    move_ib_logfiles
+    move_relay_files
+    remove_mysql_packages
+    
     puts "You now need to immediately moonshine deploy to all database servers."
     puts "After you deploy, if you're upgrading from mysql, you need to go run sudo mysql_upgrade, shut down mysql, and then restart it."
     puts "If you have issues with the deploy - apt throwing errors, then you need to move /etc/mysql/debian-start out of the way and put /etc/mysql/debian-start."
     puts "And then you need to stop all running instances of mysql and run sudo apt-get install -f"
     puts "After you do that and mysql restarts, you can run mariadb:setup_master."
     
+  end
+  
+  task :stop_slave, :roles => :db, :on_error => :continue do
+    sudo 'mysql -e "stop slave\G"'
+  end
+  
+  task :stop_mysql, :roles => :db, :on_error => :continue do
+    sudo 'service mysql stop'
+  end
+  
+  task :make_tmp_oldmysql, :roles => :db, :on_error => :continue do
+    sudo 'mkdir -p /tmp/old_mysql'
+  end
+  
+  task :move_bin_files, :roles => :db, :on_error => :continue do
+    sudo 'mv /var/lib/mysql/*-bin.* /tmp/old_mysql'
+  end
+  
+  task :move_ib_logfiles, :roles => :db, :on_error => :continue do
+    sudo 'mv /var/lib/mysql/ib_logfile* /tmp/old_mysql'
+  end
+  
+  task :move_relay_files, :roles => :db, :on_error => :continue do
+    sudo 'mv /var/lib/mysql/*-relay.* /tmp/old_mysql'
+  end
+  
+  task :remove_mysql_packages, :roles => :db, :on_error => :continue do
+    sudo 'apt-get remove mysql-server mysql-client -y'
   end
   
   desc "Performs initial steps for getting the new master ready to form a new cluster."
