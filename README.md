@@ -39,14 +39,14 @@ If you're using [moonshine_multi_server](http://github.com/railsmachine/moonshin
   cluster_address = []
   
   database_servers.each do |server|
-    cluster_address << server[:internal_ip]
+    cluster_address.push server[:internal_ip]
   end
   
   allowed_hosts = internal_ips
-  allowed_hosts << 'localhost'
+  allowed_hosts.push 'localhost'
   
   servers_with_rails_env.each do |server|
-    allowed_hosts << server[:internal_ip]
+    allowed_hosts.push server[:internal_ip]
   end
   
   {
