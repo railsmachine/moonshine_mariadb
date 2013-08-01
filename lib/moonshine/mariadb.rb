@@ -36,7 +36,8 @@ module Moonshine
 
       package 'mariadb-galera-server',
         :ensure => :installed,
-        :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
+        :require => [exec('mariadb apt-get update'), exec('add mariadb repo'), file('/etc/mysql/debian-start')],
+        :install_options => [{'DEBIAN_FRONTEND' => 'noninteractive'}]
 
       package 'galera',
         :ensure => :installed,
@@ -45,6 +46,13 @@ module Moonshine
     end
 
     def mariadb_config
+
+      file '/etc/mysql/',
+        :ensure => :directory
+        
+      file '/etc/mysql/conf.d',
+        :ensure => :directory,
+        :require => file('/etc/mysql')
 
       file '/etc/mysql/conf.d/mariadb.cnf',
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'mariadb.cnf.erb')),
@@ -58,6 +66,13 @@ module Moonshine
         
       file '/etc/mysql/conf.d/innodb.cnf',
         :ensure => :absent
+        
+      file '/etc/mysql/debian-start',
+        :ensure => :present,
+        :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'debian-start')),
+        :owner => 'root',
+        :mode => '0655',
+        :require => file('/etc/mysql')
 
     end
 
@@ -91,7 +106,7 @@ EOF
 
       service 'mysql', 
         :ensure => :running,
-        :require => package('mariadb-galera-server')
+        :require => [package('mariadb-galera-server'),file('/etc/mysql/conf.d/mariadb.cnf'),file('/etc/mysql/conf.d/moonshine.cnf'),file('/etc/mysql/debian-start')]
 
     end
 

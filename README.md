@@ -99,11 +99,42 @@ If you're creating a cluster for the first time, the first deploy after MariaDB 
 
 ## Other Useful Cap Tasks
 
-* <code>mariadb:status</code> - Tells you if all three nodes are synced.
+* <code>mariadb:status</code> - Tells you if the nodes are synced.
 * <code>mariadb:restart</code> - Safely restarts MySQL on all the nodes. You *never* want to restart all the nodes at once as MySQL won't come back up since there's not another node to talk to. If you change your configuration files and deploy, you'll need to remember to run this after the deploy finishes.
 
 ## Notes on Upgrading in Place
 
 According to the MariaDB folks, it's possible to upgrade from MySQL 5.1 to MariaDB 5.x pretty much in place - and that's true, but it's not without its quirks, especially in a production deployment or moving from classic master/slave to a cluster.  
 
-We're going to be upgrading some of our apps in the next week or two and will update the README with the steps we've taken and the configuration we end up running in production.
+Thanks to a few days spent with [moonshine_vagrant](http://github.com/railsmachine/moonshine_vagrant), we now have a somewhat automated way to upgrade from MySQL 5.1 to MariaDB 5.5 using a series of cap tasks, deploys and a little manual intervention.  Before you get started, you should have something like this in your deploy stage (config/deploy/staging.rb, for example):
+
+<pre><code>server 'mysql1.thing.com', :db, :master => true, :primary => true
+server 'mysql2.thing.com', :db, :slave => true
+server 'mysql3.thing.com', :db, :slave => true</code></pre>
+
+Remember, MariaDB's cluster implementation works best with *three* database servers, though it will work with two.  We're also assuming you have classic MySQL replication in place - which we'll be turning off during the upgrade process (don't worry, MariaDB's replication is *way* better).  Here's the order you should do things in:
+
+* Before changing your database manifest to use the MariaDB plugin, you should deploy one last time to make sure everything's up to date.
+* Now add all the MariaDB stuff to your database manifest, *but don't deploy*!
+* You should now put your app into maintenance mode and stop any workers you have (because MySQL's going down for at least a few minutes).
+* Run <code>cap STAGE mariadb:remove_mysql</code>.  This stops slaving, shuts down MySQL and removes their packages.
+* Now do a moonshine deploy *just* to the master.  It's going to fail in a couple of places, and that's OK.
+* Once the deploy is finished, ssh to the master and do the following:
+  * <code>sudo bash</code>
+  * <code>mysqladmin shutdown</code>
+  * <code>service mysql stop</code>
+  * <code>ps -eaf | grep mysql</code> - If anything is in this list other than your ps command, kill -9 it.
+  * <code>cd /var/lib/mysql</code>
+  * <code>rm -f ib_logfile*</code>
+  * <code>rm -f grastate.dat</code>
+  * <code>rm -f galera.cache</code>
+  * <code>service mysql start</code>
+  * <code>mysql</code> and then run <code>show status like 'wsrep_%';</code>.  If you don't see the word "Synced" in there, then start over with the process from mysqladmin shutdown.  It sometimes takes a couple of restarts for mysql_upgrade to do its thing.
+  * Once you get the right answer from the SQL query, you're ready to go on to the next steps.
+* Do a moonshine deploy to just the slaves. For each one in turn, you'll need to go through the steps you went through on the master until the slaves show Synced (you should see the master's private IP address in there somewhere as well).
+* Once they're synced, run <code>cap STAGE mariadb:finalize_cluster</code>, and as long as they're still synced at the end, you're done!
+
+
+
+
+

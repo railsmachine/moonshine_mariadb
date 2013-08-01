@@ -18,16 +18,73 @@ namespace :mariadb do
     stop_mysql
     make_tmp_oldmysql
     move_bin_files
-    move_ib_logfiles
+    remove_ib_logfiles
     move_relay_files
     remove_mysql_packages
     
-    puts "You now need to immediately moonshine deploy to all database servers."
-    puts "After you deploy, if you're upgrading from mysql, you need to go run sudo mysql_upgrade, shut down mysql, and then restart it."
-    puts "If you have issues with the deploy - apt throwing errors, then you need to move /etc/mysql/debian-start out of the way and put /etc/mysql/debian-start."
-    puts "And then you need to stop all running instances of mysql and run sudo apt-get install -f"
-    puts "After you do that and mysql restarts, you can run mariadb:setup_master."
+    sleep 3
+
+    download_debian_cnf
+    make_slave_setup_conf
+    upload_master_setup_conf
     
+    upload_slave_setup_conf    
+    
+    
+    puts "You now need to immediately moonshine deploy to all database servers."
+    puts "After you deploy, run cap STAGE mariadb:mysql_upgrade_step_two"
+    puts "If you run into errors, then you'll need to ssh into each host and run sudo apt-get install -f"
+    puts "After you do that and mysql restarts, you can run mariadb:setup_master, setup_slave and then finalize_cluster."
+    
+  end
+  
+  task :mysql_upgrade_step_two, :roles => :db, :only => {:primary => true} do
+    mysqladmin_shutdown
+    sleep 2
+    no_really_kill_mysql
+    stop_mysql
+    
+    sleep 3
+    
+    remove_ib_logfiles
+    remove_grastate
+    remove_galera_cache
+
+    start_mysql
+
+    puts "You should now run mariadb:setup_master and then mariadb:setup_slaves"
+  end
+  
+  task :no_really_kill_mysql, :roles => :db, :on_error => :continue do
+    run 'sudo ps -ef | grep \'mysql\' | awk \'{print $2}\' | xargs kill -9'
+  end
+  
+  task :start_master_mysql, :roles => :db, :on_error => :continue do
+    sudo 'service mysql start', :hosts => mariadb_initial_master
+  end
+  
+  task :start_slave_mysql, :roles => :db, :on_error => :continue do
+    sudo 'service mysql start', :hosts => mariadb_initial_slaves
+  end
+  
+  task :remove_grastate, :roles => :db, :on_error => :continue do
+    sudo 'rm -f /var/lib/mysql/grastate.dat'
+  end
+  
+  task :remove_galera_cache, :roles => :db, :on_error => :continue do
+    sudo 'rm -f /var/lib/mysql/galera.cache'
+  end
+  
+  task :step_two_move_debian_start, :roles => :db, :on_error => :continue do
+    sudo "mv /etc/mysql/debian-start /etc/mysql/debian-start.old"
+  end
+  
+  task :step_two_move_package_debian_start, :roles => :db, :on_error => :continue do
+    sudo "cp /etc/mysql/debian-start.dpkg-dist /etc/mysql/debian-start"
+  end
+  
+  task :mysqladmin_shutdown, :roles => :db, :on_error => :continue do
+    sudo 'mysqladmin shutdown'
   end
   
   task :stop_slave, :roles => :db, :on_error => :continue do
@@ -38,6 +95,10 @@ namespace :mariadb do
     sudo 'service mysql stop'
   end
   
+  task :start_mysql, :roles => :db, :on_error => :continue do
+    sudo 'service mysql start'
+  end
+  
   task :make_tmp_oldmysql, :roles => :db, :on_error => :continue do
     sudo 'mkdir -p /tmp/old_mysql'
   end
@@ -46,8 +107,8 @@ namespace :mariadb do
     sudo 'mv /var/lib/mysql/*-bin.* /tmp/old_mysql'
   end
   
-  task :move_ib_logfiles, :roles => :db, :on_error => :continue do
-    sudo 'mv /var/lib/mysql/ib_logfile* /tmp/old_mysql'
+  task :remove_ib_logfiles, :roles => :db, :on_error => :continue do
+    sudo 'rm -f /var/lib/mysql/ib_logfile*'
   end
   
   task :move_relay_files, :roles => :db, :on_error => :continue do
@@ -59,17 +120,19 @@ namespace :mariadb do
   end
   
   desc "Performs initial steps for getting the new master ready to form a new cluster."
-  task :setup_master, :roles => :db do
+  task :setup_master, :roles => :db, :only => {:master => true} do
     transaction do
+      download_debian_cnf
       make_slave_setup_conf
       upload_master_setup_conf
+            
       restart_master
     end
     puts "You now need to do a moonshine deploy just to #{mariadb_initial_master} to create all the database users you need."
   end
   
   desc "Adds the initial slaves to the cluster."
-  task :setup_slaves, :roles => :db do
+  task :setup_slaves, :roles => :db, :only => {:slave => true} do
     transaction do
       upload_slave_setup_conf
       restart_slaves
@@ -93,14 +156,14 @@ namespace :mariadb do
     puts "As long as all the nodes say they're synced, you're done!"
   end
 
-  task :upload_master_setup_conf, :roles => :db do
-    # TODO: Download the debian.cnf from the master.
+  task :download_debian_cnf, :roles => :db do
     debian_conf = capture "sudo cat /etc/mysql/debian.cnf", :hosts => mariadb_initial_master
     f = File.open("debian.cnf",'w+')
     f.puts debian_conf
-    f.close 
-    
-    # TODO: Upload new master_setup.cnf to initial master in /src/mysql/conf.d/ that sets the wsrep_cluster_address to gcomm://
+    f.close     
+  end
+
+  task :upload_master_setup_conf, :roles => :db do
     upload 'vendor/plugins/moonshine_mariadb/templates/master_setup.cnf', '/tmp/master_setup.cnf', :hosts => mariadb_initial_master
     sudo 'mv /tmp/master_setup.cnf /etc/mysql/conf.d/master_setup.cnf', :hosts => mariadb_initial_master
   end
