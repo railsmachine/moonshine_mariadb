@@ -31,10 +31,10 @@ namespace :mariadb do
     upload_slave_setup_conf    
     
     
-    puts "You now need to immediately moonshine deploy to all database servers."
-    puts "After you deploy, run cap STAGE mariadb:mysql_upgrade_step_two"
+    puts "You now need to immediately moonshine deploy to the master (the first server in the mysql list)."
+    puts "After you deploy, run cap STAGE mariadb:setup_master"
     puts "If you run into errors, then you'll need to ssh into each host and run sudo apt-get install -f"
-    puts "After you do that and mysql restarts, you can run mariadb:setup_master, setup_slave and then finalize_cluster."
+    puts "Once you get the first server running, deploy to the slaves and run mariadb:setup_slaves"
     
   end
   
@@ -129,6 +129,7 @@ namespace :mariadb do
       restart_master
     end
     puts "You now need to do a moonshine deploy just to #{mariadb_initial_master} to create all the database users you need."
+    puts "After that, deploy to all the slaves and run mariadb:setup_slaves."
   end
   
   desc "Adds the initial slaves to the cluster."

@@ -8,7 +8,7 @@ service mariadbchk
   disable = no
   socket_type = stream
   port = 9200
-  user = rails
+  user = <%= configuration[:user] %>
   server = /usr/bin/mariadbchk
   log_on_failure += USERID
   only_from = 0.0.0.0
