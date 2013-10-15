@@ -1,9 +1,9 @@
 #! /usr/bin/ruby
 
-username = '<%= database_environment[:username] %>'
-password = '<%= database_environment[:password] %>'
+username = "<%= database_environment[:username] %>"
+password = "<%= database_environment[:password] %>"
 
-status = `mysql --user=#{username} --password=#{password} -e "SHOW STATUS LIKE 'wsrep_local_state';"`
+status = `mysql --user="#{username}" --password="#{password}" -e "SHOW STATUS LIKE 'wsrep_local_state';"`
 lines = status.split("\n")
 value = lines.last.split("\t").last
 
