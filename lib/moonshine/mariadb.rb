@@ -8,7 +8,6 @@ module Moonshine
       recipe :mariadb_user
       recipe :mariadb_database
       recipe :mariadbchk
-      recipe :mysql_gem
     end
 
     def mariadb_package
@@ -22,9 +21,16 @@ module Moonshine
       if ubuntu_precise?
         repo = "precise"
       else
-        repo = "lucid"
+        repo = 'lucid'
       end
       
+      file '/etc/apt/preferences.d',
+        :ensure => :directory
+      
+      file '/etc/apt/preferences.d/mariadb',
+        :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', "mariadb-preferences.erb")),
+        :ensure => :present,
+        :require => [file('/etc/apt/preferences.d')]
       
       exec "add mariadb repo",
         :command => "sudo add-apt-repository 'deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu #{repo} main'",
@@ -32,12 +38,12 @@ module Moonshine
         
       exec "mariadb apt-get update",
         :command => "sudo apt-get update",
-        :require => exec('add mariadb repo')
+        :require => [exec('add mariadb repo'), file('/etc/apt/preferences.d/mariadb')]
 
       package 'mariadb-galera-server',
         :ensure => :installed,
-        :require => [exec('mariadb apt-get update'), exec('add mariadb repo'), file('/etc/mysql/debian-start')],
-        :install_options => [{'DEBIAN_FRONTEND' => 'noninteractive'}]
+        :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')],
+        :install_options => [{'DEBIAN_FRONTEND' => 'noninteractive'}, '--force-yes']
 
       package 'galera',
         :ensure => :installed,
@@ -72,7 +78,7 @@ module Moonshine
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'debian-start')),
         :owner => 'root',
         :mode => '0655',
-        :require => file('/etc/mysql')
+        :require => [file('/etc/mysql'), package('mariadb-galera-server')]
 
     end
 
