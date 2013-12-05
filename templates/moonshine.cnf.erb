@@ -34,4 +34,8 @@ log_slow_queries      = <%= configuration[:mariadb][:log_slow_queries] || '/var/
 <% end %>
 long_query_time       = <%= configuration[:mariadb][:long_query_time] || '5' %>
 
+<% if configuration[:mariadb][:server_id] %>
+server_id             = <%= configuration[:mariadb][:server_id] %>
+<% end %>
+
 <%= configuration[:mariadb][:extra] %>
