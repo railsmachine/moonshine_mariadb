@@ -16,13 +16,16 @@ module Moonshine
 
       exec "add mariadb key",
         :command => "sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db",
-        :require => package('python-software-properties')
+        :require => package('python-software-properties'),
+        :unless => "sudo apt-key list | grep 'MariaDB Package Signing Key'"
       
       if ubuntu_precise?
         repo = "precise"
       else
         repo = 'lucid'
       end
+      
+      repo_path = "deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu #{repo} main"
       
       file '/etc/apt/preferences.d',
         :ensure => :directory
@@ -33,8 +36,9 @@ module Moonshine
         :require => [file('/etc/apt/preferences.d')]
       
       exec "add mariadb repo",
-        :command => "sudo add-apt-repository 'deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu #{repo} main'",
-        :require => exec('add mariadb key')
+        :command => "sudo add-apt-repository '#{repo_path}'",
+        :require => exec('add mariadb key'),
+        :unless => "cat /etc/apt/sources.list | grep '#{repo_path}'"
         
       exec "mariadb apt-get update",
         :command => "sudo apt-get update",
