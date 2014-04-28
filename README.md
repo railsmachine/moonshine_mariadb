@@ -107,3 +107,7 @@ If you're creating a cluster for the first time, the first deploy after MariaDB 
 According to the MariaDB folks, it's possible to upgrade from MySQL 5.1 to MariaDB 5.x pretty much in place - and that's true, but it's not without its quirks, especially in a production deployment or moving from classic master/slave to a cluster.  
 
 We're going to be upgrading some of our apps in the next week or two and will update the README with the steps we've taken and the configuration we end up running in production.
+
+***
+
+Unless otherwise specified, all content copyright &copy; 2014, [Rails Machine, LLC](http://railsmachine.com)
