@@ -27,6 +27,7 @@ wsrep_sst_receive_address = <%= configuration[:mariadb][:wsrep_sst_receive_addre
 wsrep_node_name           = <%= configuration[:mariadb][:wsrep_node_name] || 'localhost' %>
 wsrep_sst_auth          = <%= database_environment[:username] %>:<%= database_environment[:password] %>
 wsrep_sst_method=rsync
+wsrep_provider_options='socket.checksum=1'
 <% end %>
 
 binlog_format = ROW
