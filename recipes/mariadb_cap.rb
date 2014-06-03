@@ -147,14 +147,11 @@ namespace :mariadb do
     transaction do
       remove_master_setup_conf
       remove_slave_setup_conf
-      restart_master
-      sleep 3
       upload_debian_cnf_to_slaves
-      restart_slaves
       sleep 3
       status
     end
-    puts "As long as all the nodes say they're synced, you're done!"
+    puts "We've removed the setup config files. As long as things are synced, you're good to go!"
   end
 
   task :download_debian_cnf, :roles => :db do
