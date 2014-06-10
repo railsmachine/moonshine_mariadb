@@ -18,7 +18,7 @@ collation-server      = utf8_general_ci
 character_set_server   = utf8
 collation_server       = utf8_general_ci
 
-<% if database_servers.length > 1 && configuration[:mariadb][:disable_galera] != true %>
+<% if defined?(database_servers) && database_servers.length > 1 && configuration[:mariadb][:disable_galera] != true %>
 wsrep_provider          = /usr/lib/galera/libgalera_smm.so
 wsrep_cluster_address   = <%= configuration[:mariadb][:gcomm_cluster_address] || "gcomm://" %>
 wsrep_cluster_name      = <%= configuration[:mariadb][:wsrep_cluster_name] || "mariadb" %>
