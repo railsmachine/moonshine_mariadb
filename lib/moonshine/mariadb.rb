@@ -2,6 +2,7 @@ module Moonshine
   module MariaDb
 
     def mariadb
+      recipe :mariadb_repo
       recipe :mariadb_package
       recipe :mariadb_config
       recipe :mariadb_service
@@ -10,12 +11,12 @@ module Moonshine
       recipe :mariadbchk
     end
 
-    def mariadb_package
+    def mariadb_repo
       package 'python-software-properties',
         :ensure => :installed
 
       exec "add mariadb key",
-        :command => "sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db",
+        :command => "sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db",
         :require => package('python-software-properties'),
         :unless => "sudo apt-key list | grep 'MariaDB Package Signing Key'"
 
@@ -43,7 +44,9 @@ module Moonshine
       exec "mariadb apt-get update",
         :command => "sudo apt-get update",
         :require => [exec('add mariadb repo'), file('/etc/apt/preferences.d/mariadb')]
+    end
 
+    def mariadb_package
       package 'mariadb-galera-server',
         :ensure => :installed,
         :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')],
@@ -52,7 +55,6 @@ module Moonshine
       package 'galera',
         :ensure => :installed,
         :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
-
     end
 
     def mariadb_config
