@@ -7,6 +7,7 @@ innodb_buffer_pool_size           = <%= configuration[:mariadb][:innodb_buffer_p
 innodb_buffer_pool_instances      = <%= configuration[:mariadb][:innodb_buffer_pool_instances] || '1' %>
 innodb_additional_mem_pool_size   = <%= configuration[:mariadb][:innodb_additional_mem_pool_size] || '16M' %>
 innodb_file_io_threads            = <%= configuration[:mariadb][:innodb_file_io_threads] || '4' %>
+innodb_log_file_size              = <%= configuration[:mariadb][:innodb_log_file_size] || "5M" %>
 
 ######### general
 default-time-zone     = <%= configuration[:mariadb][:default_time_zone] || 'SYSTEM' %>
