@@ -49,8 +49,7 @@ module Moonshine
     def mariadb_package
       package 'mariadb-galera-server',
         :ensure => :installed,
-        :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')],
-        :install_options => [{'DEBIAN_FRONTEND' => 'noninteractive'}, '--force-yes']
+        :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')]
 
       package 'galera',
         :ensure => :installed,
