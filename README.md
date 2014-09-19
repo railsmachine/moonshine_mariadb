@@ -8,7 +8,7 @@ This is a [Moonshine](http://github.com/railsmachine/moonshine) recipe for insta
 
 * You should *never* restart all the nodes in your cluster at the same time, or you'll need to go through the setup cap tasks again.
 * If you change any of the mariadb settings, you'll need to run the mariadb:restart task, as it's not restarted during deploy (for the reason stated above)
-* We haven't tested this on a single server yet, just with a cluster.  There's no reason why it shouldn't work - but it might not.
+* You can use this with a single server and you get the benefits of MariaDB over old school MySQL, but we *highly* recommend using galera replication. It's faster, more reliable, and easier to recover from if something goes wrong.
 
 ## Installation
 
