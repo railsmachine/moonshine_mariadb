@@ -1,6 +1,6 @@
 ## Description
 
-We consider this plugin **beta** at best.  We'll be making lots of updates to it over the next few weeks as we roll out MariaDB to several of our own apps.
+We used to consider this plugin beta, but we've now been using it for over a year and have several customers on it.  We consider it... *awesome*.
 
 This is a [Moonshine](http://github.com/railsmachine/moonshine) recipe for installing and configuring [MariaDB](http://mariadb.org), and setting up a Galera Cluster for replication and failover.  If there's only one server in the database_servers list, it will run MariaDB in standalone mode without any cluster configuration.  If there are two or more (3 nodes are recommended), then it will create the configuration for a cluster.  We've provided several cap tasks to properly configure and bootstrap the cluster (see the Bootstrapping the Cluster section)
 
