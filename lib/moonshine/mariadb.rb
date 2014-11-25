@@ -9,6 +9,7 @@ module Moonshine
       recipe :mariadb_user
       recipe :mariadb_database
       recipe :mariadbchk
+      recipe :mariadb_logrotate
     end
 
     def mariadb_repo
@@ -143,6 +144,28 @@ EOF
         :require => package('xinetd'),
         :notify => service('xinetd')
 
+    end
+
+    def mariadb_logrotate
+      file '/etc/logrotate.d/varlogmysql.conf', :ensure => :absent
+      file '/etc/logrotate.d/mysql-server.conf', :ensure => :absent
+
+      logrotate_options = configuration[:mysql][:logrotate] || {}
+      logrotate_options[:frequency] ||= 'daily'
+      logrotate_options[:count] ||= '7'
+      logrotate "/var/log/mysql/*.log",
+        :logrotated_file => 'mariadb-server',
+        :options => [
+          logrotate_options[:frequency],
+          'missingok',
+          "rotate #{logrotate_options[:count]}",
+          'compress',
+          'delaycompress',
+          'notifempty',
+          'create 640 mysql adm',
+          'sharedscripts'
+        ],
+        :postrotate => 'MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"; if [ -z "`$MYADMIN ping 2>/dev/null`" ]; then if ps cax | grep -q mysqld; then exit 1; fi ; else $MYADMIN flush-logs; fi'
     end
 
     private
