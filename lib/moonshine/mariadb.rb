@@ -150,7 +150,7 @@ EOF
       file '/etc/logrotate.d/varlogmysql.conf', :ensure => :absent
       file '/etc/logrotate.d/mysql-server.conf', :ensure => :absent
 
-      logrotate_options = configuration[:mysql][:logrotate] || {}
+      logrotate_options = configuration[:mariadb][:logrotate] || {}
       logrotate_options[:frequency] ||= 'daily'
       logrotate_options[:count] ||= '7'
       logrotate "/var/log/mysql/*.log",
