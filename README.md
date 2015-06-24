@@ -51,9 +51,9 @@ If you're using [moonshine_multi_server](http://github.com/railsmachine/moonshin
   
   {
     :gcomm_cluster_address => "gcomm://#{cluster_address.join(",")}",
-    :wsrep_node_address => Facter.ipaddress_eth1,
-    :wsrep_sst_receive_address => Facter.ipaddress_eth1,
-    :wsrep_node_name => Facter.hostname,
+    :wsrep_node_address => Facter.value(:ipaddress_eth1),
+    :wsrep_sst_receive_address => Facter.value(:ipaddress_eth1),
+    :wsrep_node_name => Facter.value(:hostname),
     :wsrep_cluster_name => "rmcom",
     :allowed_hosts => allowed_hosts
   }
