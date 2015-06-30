@@ -21,7 +21,9 @@ module Moonshine
         :require => package('python-software-properties'),
         :unless => "sudo apt-key list | grep 'MariaDB Package Signing Key'"
 
-      if ubuntu_precise?
+      if ubuntu_trusty?
+        repo = "trusty"
+      elsif ubuntu_precise?
         repo = "precise"
       else
         repo = 'lucid'
@@ -52,9 +54,11 @@ module Moonshine
         :ensure => :installed,
         :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')]
 
-      package 'galera',
-        :ensure => :installed,
-        :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
+      unless ubuntu_trusty?
+        package 'galera',
+          :ensure => :installed,
+          :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
+      end
     end
 
     def mariadb_config
