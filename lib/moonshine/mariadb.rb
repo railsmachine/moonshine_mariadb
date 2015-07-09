@@ -60,7 +60,7 @@ module Moonshine
         :ensure => :installed,
         :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')]
 
-      unless ubuntu_trusty?
+      if ubuntu_lucid?
         package 'galera',
           :ensure => :installed,
           :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
