@@ -13,15 +13,6 @@ module Moonshine
     end
 
     def mariadb_repo
-      if ubuntu_trusty?
-        package 'software-properties-common',
-          :alias => 'python-software-properties',
-          :ensure => :installed
-      else
-        package 'python-software-properties',
-          :ensure => :installed
-      end
-
       exec "add mariadb key",
         :command => "sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db",
         :require => package('python-software-properties'),
