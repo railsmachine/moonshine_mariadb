@@ -26,7 +26,8 @@ module Moonshine
         repo = 'lucid'
       end
 
-      repo_path = "deb http://ftp.osuosl.org/pub/mariadb/repo/5.5/ubuntu #{repo} main"
+      version = (configuration[:mariadb][:version] || '5.5')
+      repo_path = "deb http://ftp.osuosl.org/pub/mariadb/repo/#{version}/ubuntu #{repo} main"
 
       file '/etc/apt/preferences.d',
         :ensure => :directory
@@ -47,14 +48,31 @@ module Moonshine
     end
 
     def mariadb_package
-      package 'mariadb-galera-server',
-        :ensure => :installed,
-        :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')]
+      if configuration[:mariadb][:version] == '5.5' or configuration[:mariadb][:version] == '10.0'
+        package 'mariadb-galera-server',
+          :ensure => :installed,
+          :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo')]
+      else
+        package 'mariadb-galera-server',
+          :ensure => :absent
+
+        package 'mariadb-server',
+          :ensure => :installed,
+          :require => [file('/etc/apt/preferences.d/mariadb'), exec('mariadb apt-get update'), exec('add mariadb repo'), package('mariadb-galera-server')]
+      end
 
       if ubuntu_lucid?
         package 'galera',
           :ensure => :installed,
           :require => [exec('mariadb apt-get update'), exec('add mariadb repo')]
+      end
+    end
+
+    def mariadb_package_name
+      if configuration[:mariadb][:version] == '5.5' or configuration[:mariadb][:version] == '10.0'
+        'mariadb-galera-server'
+      else # MariaDB 10.1 includes Galera by default now
+        'mariadb-server'
       end
     end
 
@@ -70,12 +88,12 @@ module Moonshine
       file '/etc/mysql/conf.d/mariadb.cnf',
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'mariadb.cnf.erb')),
         :ensure => :present,
-        :require => package('mariadb-galera-server')
+        :require => package(mariadb_package_name)
 
       file '/etc/mysql/conf.d/moonshine.cnf',
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'moonshine.cnf.erb')),
         :ensure => :present,
-        :require => package('mariadb-galera-server')
+        :require => package(mariadb_package_name)
 
       file '/etc/mysql/conf.d/innodb.cnf',
         :ensure => :absent
@@ -85,7 +103,7 @@ module Moonshine
         :content => template(File.join(File.dirname(__FILE__), '..', '..', 'templates', 'debian-start')),
         :owner => 'root',
         :mode => '0655',
-        :require => [file('/etc/mysql'), package('mariadb-galera-server')]
+        :require => [file('/etc/mysql'), package(mariadb_package_name)]
 
     end
 
@@ -119,7 +137,7 @@ EOF
 
       service 'mysql',
         :ensure => :running,
-        :require => [package('mariadb-galera-server'),file('/etc/mysql/conf.d/mariadb.cnf'),file('/etc/mysql/conf.d/moonshine.cnf'),file('/etc/mysql/debian-start')]
+        :require => [package(mariadb_package_name),file('/etc/mysql/conf.d/mariadb.cnf'),file('/etc/mysql/conf.d/moonshine.cnf'),file('/etc/mysql/debian-start')]
 
     end
 

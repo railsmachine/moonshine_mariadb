@@ -4,35 +4,40 @@
 
 ######### innodb options
 innodb_buffer_pool_size           = <%= configuration[:mariadb][:innodb_buffer_pool_size] || '128M' %>
-innodb_buffer_pool_instances      = <%= configuration[:mariadb][:innodb_buffer_pool_instances] || '1' %>
+innodb_buffer_pool_instances      = <%= configuration[:mariadb][:innodb_buffer_pool_instances] || '8' %>
 innodb_additional_mem_pool_size   = <%= configuration[:mariadb][:innodb_additional_mem_pool_size] || '16M' %>
 innodb_file_io_threads            = <%= configuration[:mariadb][:innodb_file_io_threads] || '4' %>
-innodb_log_file_size              = <%= configuration[:mariadb][:innodb_log_file_size] || "5M" %>
+innodb_log_file_size              = <%= configuration[:mariadb][:innodb_log_file_size] || "48M" %>
 
 ######### general
 default-time-zone     = <%= configuration[:mariadb][:default_time_zone] || 'SYSTEM' %>
 connect_timeout       = <%= configuration[:mariadb][:connect_timeout] || '10' %>
-back_log              = <%= configuration[:mariadb][:back_log] || '50' %>
+back_log              = <%= configuration[:mariadb][:back_log] || '150' %>
 max_connections       = <%= configuration[:mariadb][:max_connections] || '200' %>
-max_connect_errors    = <%= configuration[:mariadb][:max_connect_errors] || '10' %>
+max_connect_errors    = <%= configuration[:mariadb][:max_connect_errors] || '100' %>
 table_cache           = <%= configuration[:mariadb][:table_cache] || '2048' %>
 open_files_limit      = <%= configuration[:mariadb][:open_files_limit] || '1024' %>
 max_heap_table_size   = <%= configuration[:mariadb][:max_heap_table_size] || '64M' %>
 key_buffer_size       = <%= configuration[:mariadb][:key_buffer_size] || '128M' %>
-join_buffer_size      = <%= configuration[:mariadb][:join_buffer_size] || '128K' %>
+join_buffer_size      = <%= configuration[:mariadb][:join_buffer_size] || '256K' %>
 read_buffer_size      = <%= configuration[:mariadb][:read_buffer_size] || '128KM' %>
 sort_buffer_size      = <%= configuration[:mariadb][:sort_buffer_size] || '2M' %>
 read_rnd_buffer_size  = <%= configuration[:mariadb][:read_rnd_buffer_size] || '256K' %>
 thread_cache_size     = <%= configuration[:mariadb][:thread_cache_size] || '8' %>
 thread_concurrency    = <%= configuration[:mariadb][:thread_concurrency] || '8' %>
-query_cache_size      = <%= configuration[:mariadb][:query_cache_size] || '128M' %>
+query_cache_size      = <%= configuration[:mariadb][:query_cache_size] || '1M' %>
 query_cache_limit     = <%= configuration[:mariadb][:query_cache_limit] || '2M' %>
 thread_stack          = <%= configuration[:mariadb][:thread_stack] || '192K' %>
 transaction_isolation = <%= configuration[:mariadb][:transaction_isolation] || 'READ-COMMITTED' %>
 tmp_table_size        = <%= configuration[:mariadb][:tmp_table_size] || '128M' %>
 tmpdir                = <%= configuration[:mariadb][:tmpdir] || '/tmp' %>
 <% unless configuration[:mariadb][:disable_slow_query_log] %>
+<% if configuration[:mariadb][:version] == '5.5' %>
 log_slow_queries      = <%= configuration[:mariadb][:log_slow_queries] || '/var/log/mysql/slow_queries.log' %>
+<% else %>
+slow_query_log        = <%= configuration[:mysql][:disable_slow_query_log] ? 0 : 1 %>
+slow_query_log_file   = <%= configuration[:mysql][:log_slow_queries] || '/var/log/mysql/slow_queries.log' %>
+<% end %>
 <% end %>
 long_query_time       = <%= configuration[:mariadb][:long_query_time] || '5' %>
 
